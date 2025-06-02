@@ -13,19 +13,18 @@ The accuracy of the computed sun vector directly affects the performance of the 
 both for the mode transitions, sun pointing controller accuracy, and attitude determination.
 
 """
-
-from apps.adcs.consts import PhysicalConst, StatusConst
-from core import logger
-from hal.configuration import SATELLITE
-from micropython import const
-from ulab import numpy as np
-
-_MAX_RANGE = const(140000)  # OPT4001
-_THRESHOLD_ILLUMINATION_LUX = const(3000)
-_NUM_LIGHT_SENSORS = const(9)
-_ERROR_LUX = const(-1)
+from .consts import PhysicalConst, StatusConst
+import numpy as np
+# from core import logger
+# from hal.configuration import SATELLITE
 
 
+_MAX_RANGE = 140000  # OPT4001
+_THRESHOLD_ILLUMINATION_LUX = 3000
+_NUM_LIGHT_SENSORS = 9
+_ERROR_LUX = -1
+
+"""
 def _read_light_sensor(face):
     if SATELLITE.LIGHT_SENSOR_AVAILABLE(face):
         return SATELLITE.LIGHT_SENSORS[face].lux()
@@ -34,12 +33,12 @@ def _read_light_sensor(face):
 
 
 def read_light_sensors():
-    """
+    """"""
     Read the light sensors on the x+,x-,y+,y-, and z- faces of the satellite.
 
     Returns:
         lux_readings: list of lux readings on each face. A "ERROR_LUX" reading comes from a dysfunctional sensor.
-    """
+    """"""
 
     faces = ["XP", "XM", "YP", "YM", "ZP1", "ZP2", "ZP3", "ZP4", "ZM"]
     lux_readings = []
@@ -52,7 +51,7 @@ def read_light_sensors():
             lux_readings.append(_ERROR_LUX)
 
     return lux_readings
-
+"""
 
 def compute_body_sun_vector_from_lux(I_vec):
     """

@@ -4,9 +4,18 @@ Attitude Control Module for the Attitude Determination and Control Subsystem (AD
 This module is responsible for computing voltage allocations to each of ARGUS' 6 magnetorquer coils.
 """
 
-from apps.adcs.consts import ControllerConst, MCMConst, PhysicalConst
-from hal.configuration import SATELLITE
-from ulab import numpy as np
+from .consts import ControllerConst, MCMConst, PhysicalConst
+import numpy as np
+# from hal.configuration import SATELLITE
+
+"""
+Where SATELLITE is used in this file
+EP_status = SATELLITE.TORQUE_DRIVERS_AVAILABLE(MCMConst.MCM_FACES[2 * n])
+EM_status = SATELLITE.TORQUE_DRIVERS_AVAILABLE(MCMConst.MCM_FACES[2 * n + 1])
+SATELLITE.APPLY_MAGNETIC_CONTROL(MCMConst.MCM_FACES[n], u_throttle[n])
+if SATELLITE.TORQUE_DRIVERS_AVAILABLE(face):
+    SATELLITE.APPLY_MAGNETIC_CONTROL(face, 0)
+"""
 
 
 # TODO: test on mainboard
@@ -78,8 +87,9 @@ def mcm_coil_allocator(u: np.ndarray) -> np.ndarray:
     mcm_alloc = np.zeros((6, 3))
 
     for n in range(MCMConst.N_MCM // 2):
-        EP_status = SATELLITE.TORQUE_DRIVERS_AVAILABLE(MCMConst.MCM_FACES[2 * n])
-        EM_status = SATELLITE.TORQUE_DRIVERS_AVAILABLE(MCMConst.MCM_FACES[2 * n + 1])
+        # [TODO]: reinstate this as flags for testing
+        EP_status = True # SATELLITE.TORQUE_DRIVERS_AVAILABLE(MCMConst.MCM_FACES[2 * n])
+        EM_status = True # SATELLITE.TORQUE_DRIVERS_AVAILABLE(MCMConst.MCM_FACES[2 * n + 1])
 
         if EP_status and EM_status:
             mcm_alloc[2 * n, :] = MCMConst.ALLOC_MAT[2 * n, :]
@@ -102,12 +112,18 @@ def mcm_coil_allocator(u: np.ndarray) -> np.ndarray:
     # Apply Coil Voltages
     for n in range(MCMConst.N_MCM):
         if coil_status[n]:
-            SATELLITE.APPLY_MAGNETIC_CONTROL(MCMConst.MCM_FACES[n], u_throttle[n])
+            # [TODO]: reinstate the following line 
+            # SATELLITE.APPLY_MAGNETIC_CONTROL(MCMConst.MCM_FACES[n], u_throttle[n])
+            pass
 
+    return coil_status, u_throttle
+    """
     return coil_status
+    """
 
-
+"""
 def zero_all_coils():
     for face in MCMConst.MCM_FACES:
         if SATELLITE.TORQUE_DRIVERS_AVAILABLE(face):
             SATELLITE.APPLY_MAGNETIC_CONTROL(face, 0)
+"""

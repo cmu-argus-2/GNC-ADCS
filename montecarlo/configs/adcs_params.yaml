@@ -1,0 +1,43 @@
+---
+# -----------------------------------------------------------------------------------------------------------
+# ADCS settings
+# -----------------------------------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------------------------------------
+# Controller Parameters
+# -----------------------------------------------------------------------------------------------------------
+control_algorithm: "Lyapunov" # "BaseNP" # "BaseSP" # "Bcross" # # "BCROSS" or "PID" or "BaseSP"
+bcrossgain: 1.0e+08 # 0.0028
+
+mtb_att_feedback_gains: [[0.000001, 0.0, 0.0, 0.0000056,  0.0, 0.0],
+                         [0.0, 0.000001, 0.0,  0.0, 0.0000056, 0.0],
+                         [0.0, 0.0, 0.000001,  0.0,  0.0, 0.000005]]
+rw_att_feedback_gains: [0.07071, 0.00028]
+rw_vel_gain: 0.0050 # 6.5e-7
+pointing_mode: "spin-stabilized" # "detumble" # "detumble" or "spin-stabilized" or "3D-stabilized"
+pointing_target: "Sun" # "Nadir" or "Sun"
+tgt_ss_ang_vel: 2.0 # [deg/s]
+nom_rw_ang_vel: 15000.0 # 1333.0 # 0.0 # [deg/s]
+controller_dt: 1 # [s]
+estimator_dt: 1    # [s]
+spin_stab_tol: 15.0 # [deg]
+point_tol: 10.0 # [deg]
+
+# -----------------------------------------------------------------------------------------------------------
+# Attitude Estimation Parameters
+# -----------------------------------------------------------------------------------------------------------
+MEKF:
+     sigma_initial_attitude: 0.087  # [rad]
+     sigma_gyro_white: 0.0034  # [rad/sqrt(s)]
+     sigma_gyro_bias_deriv: 0.00034  # [(rad/s)/sqrt(s))]
+     sigma_sunsensor_direction: 0.0524  # [rad]
+     sigma_magnetometer_direction: 0.1  # [rad]
+
+# -----------------------------------------------------------------------------------------------------------
+# Plotting and Debugging
+# -----------------------------------------------------------------------------------------------------------
+# PlotFlags:
+#      sensor_measurements: True 
+# debugFlags:
+#      perfect_sensors: True  # Perfect measurements
+# [TODO:] flag for orbital perturbations

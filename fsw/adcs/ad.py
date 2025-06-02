@@ -9,15 +9,17 @@ magnetic field data on the mainboard.
 
 """
 
-from apps.adcs.consts import ControllerConst, Modes, PhysicalConst, StatusConst
-from apps.adcs.igrf import igrf_eci
-from apps.adcs.math import R_to_quat, quat_to_R, quaternion_multiply, skew
-from apps.adcs.orbit_propagation import OrbitPropagator
-from apps.adcs.sun import approx_sun_position_ECI, compute_body_sun_vector_from_lux, read_light_sensors
-from apps.adcs.utils import is_valid_gyro_reading, is_valid_mag_reading
-from core.time_processor import TimeProcessor as TPM
-from hal.configuration import SATELLITE
-from ulab import numpy as np
+from .consts import ControllerConst, Modes, PhysicalConst, StatusConst
+from .igrf import igrf_eci
+from .math import R_to_quat, quat_to_R, quaternion_multiply, skew
+from .orbit_propagation import OrbitPropagator
+from .sun import approx_sun_position_ECI, compute_body_sun_vector_from_lux # , read_light_sensors
+from .utils import is_valid_gyro_reading, is_valid_mag_reading
+import numpy as np
+
+# from core.time_processor import TimeProcessor as TPM
+# from hal.configuration import SATELLITE
+
 
 """
     Attitude Determination Class
@@ -70,40 +72,42 @@ class AttitudeDetermination:
     """ SENSOR READ FUNCTIONS """
 
     # ------------------------------------------------------------------------------------------------------------------------------------
-    def read_sun_position(self) -> tuple[int, np.ndarray, np.ndarray]:
+    def read_sun_position(self, light_sensor_lux_readings) -> tuple[int, np.ndarray, np.ndarray]:
         """
         - Gets the measured sun vector from light sensor measurements
         - Accesses functions inside sun.py which in turn call HAL
         """
-        light_sensor_lux_readings = read_light_sensors()
+        # light_sensor_lux_readings = read_light_sensors()
         status, sun_pos_body = compute_body_sun_vector_from_lux(light_sensor_lux_readings)
 
         return status, sun_pos_body, np.array(light_sensor_lux_readings) / PhysicalConst.LIGHT_SENSOR_LOG_FACTOR
 
-    def read_gyro(self) -> tuple[int, int, np.ndarray]:
+    def read_gyro(self, query_time, gyro) -> tuple[int, int, np.ndarray]:
         """
         - Reads the angular velocity from the gyro
         - NOTE : This replaces the data querying portion of the IMU task. Data logging still happens within the ADCS task
         """
+        # [TODO:] Update this to get the sim data 
+        # if SATELLITE.IMU_AVAILABLE:
+        # gyro = np.array(SATELLITE.IMU.gyro())
+        # query_time = TPM.time()
 
-        if SATELLITE.IMU_AVAILABLE:
-            gyro = np.array(SATELLITE.IMU.gyro())
-            query_time = TPM.time()
+        # Sensor validity check
+        return StatusConst.OK, query_time, gyro
+        # if not is_valid_gyro_reading(gyro):
+        #     return StatusConst.GYRO_FAIL, 0, np.zeros((3,))
+        # else:
+        #     return StatusConst.OK, query_time, gyro
+        # else:
+        #     return StatusConst.GYRO_FAIL, 0, np.zeros((3,))
 
-            # Sensor validity check
-            if not is_valid_gyro_reading(gyro):
-                return StatusConst.GYRO_FAIL, 0, np.zeros((3,))
-            else:
-                return StatusConst.OK, query_time, gyro
-        else:
-            return StatusConst.GYRO_FAIL, 0, np.zeros((3,))
-
-    def read_magnetometer(self) -> tuple[int, int, np.ndarray]:
+    def read_magnetometer(self, query_time, mag) -> tuple[int, int, np.ndarray]:
         """
         - Reads the magnetic field reading from the IMU
         - This is separate from the gyro measurement to allow gyro to be read faster than magnetometer
         """
-
+        return StatusConst.OK, query_time, mag
+        """
         if SATELLITE.IMU_AVAILABLE:
             mag = 1e-6 * np.array(SATELLITE.IMU.mag())  # Convert field from uT to T
 
@@ -117,18 +121,19 @@ class AttitudeDetermination:
 
         else:
             return StatusConst.MAG_FAIL, 0, np.zeros((3,))
-
+        """
+        
     # ------------------------------------------------------------------------------------------------------------------------------------
     """ MEKF INITIALIZATION """
 
     # ------------------------------------------------------------------------------------------------------------------------------------
-    def initialize_mekf(self) -> int:
+    def initialize_mekf(self, current_time, gyro, mag, light_sensor_lux_readings, gps_data) -> int:
         """
         - Initializes the MEKF using TRIAD and position from GPS
         - This function is not directly written into init to allow multiple retires of initialization
         - Sets the initialized attribute of the class once done
         """
-        current_time = TPM.time()
+        # current_time = TPM.time()
 
         if self.mekf_init_start_time is None:
             self.mekf_init_start_time = current_time
@@ -140,13 +145,13 @@ class AttitudeDetermination:
             return StatusConst.OK, StatusConst.MEKF_INIT_FORCE
 
         # Get a valid position from OrbitProp
-        status, true_pos_eci, true_vel_eci = OrbitPropagator.update_position(current_time)
+        status, true_pos_eci, true_vel_eci = OrbitPropagator.update_position(current_time, gps_data)
 
         if status != StatusConst.OK:
             return StatusConst.MEKF_INIT_FAIL, status
 
         # Get a valid sun position
-        sun_status, sun_pos_body, lux_readings = self.read_sun_position()
+        sun_status, sun_pos_body, lux_readings = self.read_sun_position(current_time, light_sensor_lux_readings)
 
         if (
             sun_status == StatusConst.SUN_NO_READINGS
@@ -156,13 +161,13 @@ class AttitudeDetermination:
             return StatusConst.MEKF_INIT_FAIL, sun_status
 
         # Get a valid magnetometer reading
-        magnetometer_status, _, mag_field_body = self.read_magnetometer()
+        magnetometer_status, _, mag_field_body = self.read_magnetometer(current_time, mag)
 
         if magnetometer_status == StatusConst.MAG_FAIL:
             return StatusConst.MEKF_INIT_FAIL, StatusConst.MAG_FAIL
 
         # Get a gyro reading (just to store in state)
-        _, _, omega_body = self.read_gyro()
+        _, _, omega_body = self.read_gyro(current_time, gyro)
 
         # Inertial sun position
         true_sun_pos_eci = approx_sun_position_ECI(current_time)
@@ -232,7 +237,7 @@ class AttitudeDetermination:
     """ MEKF PROPAGATION """
 
     # ------------------------------------------------------------------------------------------------------------------------------------
-    def position_update(self, current_time: int) -> None:
+    def position_update(self, current_time: int, gps_data: np.ndarray) -> None:
         """
         - Performs a position update
         - Accesses functions from orbit_propagation.py
@@ -241,7 +246,7 @@ class AttitudeDetermination:
         """
 
         # Get a valid position from OrbitProp
-        status, true_pos_eci, true_vel_eci = OrbitPropagator.update_position(current_time)
+        status, true_pos_eci, true_vel_eci = OrbitPropagator.update_position(current_time, gps_data)
 
         if status != StatusConst.OK:
             return StatusConst.POS_UPDATE_FAIL, status
@@ -306,12 +311,12 @@ class AttitudeDetermination:
         else:
             return StatusConst.SUN_UPDATE_FAIL, status
 
-    def magnetometer_update(self, current_time=int, update_covariance: bool = True) -> None:
+    def magnetometer_update(self, current_time: int, mag: np.ndarray, update_covariance: bool = True) -> None:
         """
         Performs an MEKF update step for magnetometer
         """
 
-        status, _, mag_field_body = self.read_magnetometer()
+        status, _, mag_field_body = self.read_magnetometer(current_time, mag)
 
         if status == StatusConst.OK:  # store magnetic field reading even if update fails to use for ACS
             self.state[self.mag_field_idx] = mag_field_body
@@ -353,13 +358,13 @@ class AttitudeDetermination:
         else:
             return StatusConst.MAG_UPDATE_FAIL, status
 
-    def gyro_update(self, current_time: int, update_covariance: bool = True) -> None:
+    def gyro_update(self, current_time: int, gyro: np.ndarray, update_covariance: bool = True) -> None:
         """
         Performs an MEKF update step for Gyro
         If update_error_covariance is False, the gyro measurements just update the attitude
         but do not reduce uncertainity in error measurements
         """
-        status, _, omega_body = self.read_gyro()
+        status, _, omega_body = self.read_gyro(current_time, gyro)
 
         self.state[self.omega_idx] = omega_body  # save omega to state
 

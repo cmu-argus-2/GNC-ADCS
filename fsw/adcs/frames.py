@@ -1,4 +1,4 @@
-from ulab import numpy as np
+import numpy as np
 
 J2000 = 946684800  # unix timestamp for the Julian date 2000-01-01
 MJD_ZERO = 2400000.5  # Offset of Modified Julian Days representation with respect to Julian Days.

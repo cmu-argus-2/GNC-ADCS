@@ -7,8 +7,8 @@ Based on: https://github.com/RoboticExplorationLab/pycubed_circuitpython/blob/ma
 
 # flake8: noqa E741
 
-import apps.adcs.frames as frames
-from ulab import numpy as np
+from . import frames
+import numpy as np
 
 
 def reset_array(input_array):

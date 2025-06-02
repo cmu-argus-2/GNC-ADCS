@@ -11,7 +11,13 @@ from argusim.world.LUT_generator import generate_lookup_tables
 from time import time
 from argusim.simulation_manager.sim import Simulator
 
-def run(sim):
+import sys
+# Get absolute path to 'fsw' directory
+fsw_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(fsw_path)
+from fsw.adcs_task import Task as ADCS
+
+def run(sim, adcs):
     """
     Runs the entire simulation
     Calls the 'step' function to run through the sim
@@ -25,10 +31,10 @@ def run(sim):
     # Load Sim start times
     sim_delta_time = 0
     last_print_time = 0
+    sim_Idx = sim.get_indexes()
 
     # Run iterations
     while sim_delta_time <= sim.params.MAX_TIME:
-        sim.set_control_input(np.zeros(sim.Idx["NU"]))
 
         # Echo the Heartbeat once every 1000s
         if sim_delta_time - last_print_time >= 1000:
@@ -36,9 +42,15 @@ def run(sim):
             last_print_time = sim_delta_time
 
         # Step through the sim
-        sim.step(sim_delta_time, sim.params.dt)
+        measurement = sim.step(sim_delta_time, sim.params.dt)
 
         sim_delta_time += sim.params.dt
+
+        # Step through the ADCS
+        adcs.main_task(sim_delta_time, measurement, sim_Idx)
+
+        sim.set_control_input(adcs.coil_throttle)
+
     # Report the sim speed-up
     elapsed_seconds_wall_clock = time() - WALL_START_TIME
     speed_up = sim.params.MAX_TIME / elapsed_seconds_wall_clock
@@ -59,5 +71,6 @@ if __name__ == "__main__":
     TRIAL_DIRECTORY = os.environ["TRIAL_DIRECTORY"]
     PARAMETER_FILEPATH = os.environ["PARAMETER_FILEPATH"]
     sim = Simulator(TRIAL_NUMBER, TRIAL_DIRECTORY, PARAMETER_FILEPATH)
+    adcs = ADCS(sim.Idx)
     print("Initialized")
-    run(sim)
+    run(sim, adcs)

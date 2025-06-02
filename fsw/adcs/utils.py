@@ -1,4 +1,4 @@
-from ulab import numpy as np
+import numpy as np
 
 """
     SENSOR VALIDITY CHECKS

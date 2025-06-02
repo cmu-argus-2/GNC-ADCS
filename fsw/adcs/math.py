@@ -4,8 +4,8 @@ Convenience math functions.
 Author(s): Derek Fan
 """
 
-from ulab import numpy as np
-
+# from ulab import numpy as np
+import numpy as np
 
 def skew(v: np.ndarray):
     return np.array(
