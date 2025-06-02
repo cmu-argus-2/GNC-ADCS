@@ -36,9 +36,10 @@ class AttitudeDetermination:
 
     """
         STATE DEFINITION : [position_eci (3x1), velocity_eci (3x1), attitude_body2eci (4x1), angular_rate_body (3x1),
-                            gyro_bias (3x1), magnetic_field_body (3x1), sun_pos_body (3x1), sun_status (1x1)]
+                            gyro_bias (3x1), magnetic_field_body (3x1), sun_pos_body (3x1), sun_status (1x1), 
+                            sun_lux_readings (9x1), magnetic_field_eci (3x1), sun_pos_eci (3x1)]
     """
-    state = np.zeros((32,))
+    state = np.zeros((38,))
     position_idx = slice(0, 3)
     velocity_idx = slice(3, 6)
     attitude_idx = slice(6, 10)
@@ -48,6 +49,8 @@ class AttitudeDetermination:
     sun_pos_idx = slice(19, 22)
     sun_status_idx = slice(22, 23)
     sun_lux_idx = slice(23, 32)
+    mag_field_eci_idx = slice(32, 35)
+    sun_pos_eci_idx = slice(35, 38)
     
     true_map = np.zeros((6,))
 
@@ -191,6 +194,8 @@ class AttitudeDetermination:
         self.state[self.sun_pos_idx] = sun_pos_body
         self.state[self.sun_status_idx] = 1
         self.state[self.sun_lux_idx] = lux_readings
+        self.state[self.mag_field_eci_idx] = true_mag_field_eci
+        self.state[self.sun_pos_eci_idx] = true_sun_pos_eci
 
         self.initialized = True
         self.last_gyro_update_time = current_time

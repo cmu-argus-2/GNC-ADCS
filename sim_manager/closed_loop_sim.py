@@ -5,7 +5,7 @@ from argusim.build.sensors.pysensors import readSensors
 
 # Python Imports
 import os
-from argusim.simulation_manager import MultiFileLogger
+from closed_loop_sim_logger import CLSimLogger
 import numpy as np
 from argusim.world.LUT_generator import generate_lookup_tables
 from time import time
@@ -32,7 +32,9 @@ def run(sim, adcs):
     sim_delta_time = 0
     last_print_time = 0
     sim_Idx = sim.get_indexes()
-
+    logger = CLSimLogger(sim.logr.log_dir, sim.logr.num_RWs, sim.logr.num_photodiodes,
+                         sim.logr.num_MTBs, sim.logr.num_panels, sim.logr.J2000_start_time)
+    
     # Run iterations
     while sim_delta_time <= sim.params.MAX_TIME:
 
@@ -49,6 +51,10 @@ def run(sim, adcs):
         # Step through the ADCS
         adcs.main_task(sim_delta_time, measurement, sim_Idx)
 
+        # Log ADCS state
+        logger.log_fsw(sim_delta_time, adcs)
+
+        # Assign control
         sim.set_control_input(adcs.coil_throttle)
 
     # Report the sim speed-up
