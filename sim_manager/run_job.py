@@ -31,7 +31,7 @@ montecarlo_rel = "montecarlo/"
 repo_root_abs = os.path.realpath(repo_root_rel)
 parameter_file_abs = os.path.join(os.path.realpath(montecarlo_rel), "configs/", parameter_file_name)
 results_directory_abs = os.path.join(os.path.realpath(montecarlo_rel), "results/")
-plot_script_abs = os.path.join(repo_root_abs, "visualization/plotter.py")
+plot_script_abs = os.path.realpath("visualization/closed_loop_plotter.py")
 
 trial_command = "'python3 sim_manager/closed_loop_sim.py'"
 trial_command_dir = repo_root_abs

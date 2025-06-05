@@ -6,13 +6,6 @@ This repository contains code and resources for testing Attitude Determination a
 
 The goal of this project is to develop, simulate, and validate ADCS algorithms tailored for the Argus CubeSat. The repository includes simulation scripts, test cases, and documentation to support robust algorithm development.
 
-## Features
-
-- Modular ADCS algorithm implementations
-- Simulation environment for algorithm validation
-- Test cases for various mission scenarios
-- Documentation and usage examples
-
 ## Getting Started
 
 1. Clone the repository:
@@ -28,17 +21,3 @@ git submodule init
 git submodule update
 sh install.sh
 ```
-3. ?
-4. Profit
-
-## Contributing
-
-Contributions are welcome! Please open issues or submit pull requests for improvements.
-
-## License
-
-This project is licensed under the MIT License.
-
-## Contact
-
-For questions or collaboration, please contact the Argus CubeSat team.

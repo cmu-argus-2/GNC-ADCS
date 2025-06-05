@@ -36,8 +36,10 @@ MEKF:
 # -----------------------------------------------------------------------------------------------------------
 # Plotting and Debugging
 # -----------------------------------------------------------------------------------------------------------
-# PlotFlags:
-#      sensor_measurements: True 
+PlotFlags:
+     attitude_determination_error: True 
+     attitude_determination_cov: True
+     attitude_determination_states: True # maybe break this down?
 # debugFlags:
 #      perfect_sensors: True  # Perfect measurements
 # [TODO:] flag for orbital perturbations
