@@ -1,10 +1,6 @@
 # Argus CubeSat ADCS Algorithm Testing
 
-This repository contains code and resources for testing Attitude Determination and Control System (ADCS) algorithms for the Argus CubeSat mission.
-
-## Overview
-
-The goal of this project is to develop, simulate, and validate ADCS algorithms tailored for the Argus CubeSat. The repository includes simulation scripts, test cases, and documentation to support robust algorithm development.
+This repository contains code and resources for testing the Attitude Determination and Control System (ADCS) algorithms for the Argus CubeSat mission.
 
 ## Getting Started
 
