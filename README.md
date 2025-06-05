@@ -8,11 +8,7 @@ The goal of this project is to develop, simulate, and validate ADCS algorithms t
 
 ## Getting Started
 
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/your-org/argus-adcs-testing.git
-    ```
-2. Install the simulation:
+Installing the simulation:
 NOTE : The simulation only supports Ubuntu systems with a version >= 22.04
 ```bash
 python3 -m venv .venv --system-site-packages
